@@ -2,6 +2,8 @@
 
 import cv2
 import apriltag
+import numpy
+# import numpy as np
 
 
 cam = cv2.VideoCapture(4)
@@ -18,6 +20,8 @@ options = apriltag.DetectorOptions(families='tag16h5',
                                  quad_contours=True)
 detector = apriltag.Detector(options)
 
+target_size = 64*4
+
 while True:
     ret_val, frame = cam.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -30,14 +34,24 @@ while True:
         B=(int(B[0]),int(B[1]))
         C=(int(C[0]),int(C[1]))
         D=(int(D[0]),int(D[1]))
-        
-        #print(points)
-        frame = cv2.line(frame, A,B, (0,255,0), 9)
-        frame = cv2.line(frame, B,C, (0,255,0), 9)
-        frame = cv2.line(frame, C,D, (0,255,0), 9)
-        frame = cv2.line(frame, D,A, (0,255,0), 9)
+
+        print(f"{A}, {B}, {C}, {D}")
+        frame_lines = cv2.line(frame, A,B, (0,255,0), 9)
+        frame_lines = cv2.line(frame_lines, B,C, (0,255,0), 9)
+        frame_lines = cv2.line(frame_lines, C,D, (0,255,0), 9)
+        frame_lines = cv2.line(frame_lines, D,A, (0,255,0), 9)
+
+        pts1 = numpy.float32([A,B,C,D])
+        pts2 = numpy.float32([[0,0],[target_size,0],[target_size,target_size],[0,target_size]])
+        M = cv2.getPerspectiveTransform(pts1,pts2)
+        dst = cv2.warpPerspective(frame,M,(target_size,target_size))
+
+
+        cv2.imshow("Cuadrado", frame_lines)
+        cv2.imshow("Transformed", dst)
+
     cv2.imshow("Tracy", gray)
-    cv2.imshow("Cuadrado", frame)
+
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
