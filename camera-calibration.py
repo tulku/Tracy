@@ -47,7 +47,8 @@ def find_screen_corners(frame):
     detector = apriltag.Detector(options)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray,(9,9),0)
+    gray = cv2.GaussianBlur(gray,(25,25),0)
+    cv2.imshow("filtrado",gray)
     results = detector.detect(gray)
     if results:
         r=results[0]
@@ -96,7 +97,7 @@ def calibrate(cam, target_size, socket):
     cv2.imshow("Cuadrado", frame_and_lines)
     return calculate_transform(corners,target_size)
 
-def brightness_threshold(img):
+def brightness_threshold_HSV(img):
     img_HSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) # convert from RGB to HSV (hue, saturation, value)
     lower = numpy.array([0,0,120]) # H,S,V
     higher = numpy.array([180,255,255])
@@ -104,6 +105,12 @@ def brightness_threshold(img):
     filtered_img = cv2.bitwise_and(img,img,mask= mask)
     return filtered_img
 
+def brightness_threshold(img):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert from RGB to HSV (hue, saturation, value)
+    _, mask = cv2.threshold(img_gray,50,255,cv2.THRESH_BINARY)
+    mask_color = cv2.cvtColor(mask,cv2.COLOR_GRAY2BGR)
+    filtered_img = cv2.bitwise_and(img,mask_color)
+    return filtered_img
 
 # bufferless VideoCapture
 class VideoCapture:
@@ -157,14 +164,14 @@ screen_to_black(socket, target_size)
 
 dst = numpy.zeros(target_size*target_size*3, dtype=numpy.int8)
 while True:
-    screen_to_black(socket, target_size)
+    # screen_to_black(socket, target_size)
     ret_val, frame = cam.read()
     send_img(socket, dst)
     
     if frame is None:
         continue
     
-    frame = brightness_threshold(frame)
+    frame = brightness_threshold_HSV(frame)
 
     dst = transform_frame(frame, M, target_size)    
     # send_img(socket, dst)
