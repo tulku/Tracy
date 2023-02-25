@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import queue
+import sys
 import threading
 import time
 
@@ -11,7 +12,8 @@ import zmq
 host = "192.168.1.177"
 port = 1337
 
-target_size = 64
+screen_size = 64
+target_size = screen_size * 10
 
 
 def connect_to_screen(host, port):
@@ -32,8 +34,8 @@ def send_img(socket, img):
     socket.recv()
 
 
-def screen_to_black(socket, target_size):
-    black_image = numpy.zeros(target_size * target_size * 3, dtype=numpy.int8)
+def screen_to_black(socket, screen_size):
+    black_image = numpy.zeros(screen_size * screen_size * 3, dtype=numpy.int8)
     send_img(socket, black_image)
 
 
@@ -174,37 +176,136 @@ class SingleVideoCapture:
         return ret_val, frame
 
 
+def blur_find_circles(frame):
+    cv2.imwrite(f"Pictures/01_frame.png", frame)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.medianBlur(gray, 25)
+    cv2.imwrite(f"Pictures/02_gray.png", gray)
+    circles = cv2.HoughCircles(
+        gray,
+        cv2.HOUGH_GRADIENT,
+        15,
+        10,
+        param1=100,
+        param2=30,
+        minRadius=30,
+        maxRadius=100,
+    )
+
+    return circles
+
+
+def find_blobs(frame):
+    # Setup SimpleBlobDetector parameters.
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Change thresholds
+    params.filterByColor = False
+    params.minThreshold = 0
+    params.maxThreshold = 255
+    params.thresholdStep = 3
+
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 1500
+    params.maxArea = 2600
+
+    # Filter by Circularity
+    params.filterByCircularity = False
+    params.minCircularity = 0.05
+
+    # Filter by Convexity
+    params.filterByConvexity = False
+    params.minConvexity = 0.5
+
+    # Filter by Inertia
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.2
+
+    # Min distance between blobs
+    params.minDistBetweenBlobs = 20
+
+    # Create a detector with the parameters
+    # OLD: detector = cv2.SimpleBlobDetector(params)
+    detector = cv2.SimpleBlobDetector_create(params)
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    frame = cv2.GaussianBlur(frame, (25, 25), 0)
+
+    blobs = detector.detect(frame)
+    return blobs
+
+
+def draw_blobs(frame, blobs):
+    frame_with_blob = cv2.drawKeypoints(
+        frame,
+        blobs,
+        numpy.array([]),
+        (0, 0, 255),
+        cv2.DRAW_MATCHES_FLAGS_DEFAULT,
+    )
+    return frame_with_blob
+
+
+def draw_circles(frame, circles):
+    if circles is not None:
+        circles = numpy.uint16(numpy.around(circles))
+        for i in circles[0, :]:
+            center = (i[0], i[1])
+            # circle center
+            cv2.circle(frame, center, 1, (0, 100, 100), 3)
+            # circle outline
+            radius = i[2]
+            cv2.circle(frame, center, radius, (255, 0, 255), 3)
+
+
+def draw_blobs_as_circles(frame, blobs):
+    for blob in blobs:
+        center = numpy.uint16(numpy.around(blob.pt))
+        # circle center
+        radius = int(blob.size)
+        cv2.circle(frame, center, radius, (255, 0, 255), -1)
+
+
 # cam = VideoCapture(4)
-cam = SingleVideoCapture(4)
+# cam = SingleVideoCapture(4)
+cam = cv2.VideoCapture(4)
 socket = connect_to_screen(host, port)
 calibration_image = open_image("tag16_05.png")
 send_img(socket, calibration_image)
 M = calibrate(cam, target_size, socket)
-screen_to_black(socket, target_size)
+screen_to_black(socket, screen_size)
 
-dst = numpy.zeros(target_size * target_size * 3, dtype=numpy.int8)
 while True:
-    # screen_to_black(socket, target_size)
     ret_val, frame = cam.read()
-    send_img(socket, dst)
 
     if frame is None:
         continue
 
-    frame = brightness_threshold_HSV(frame)
-
     dst = transform_frame(frame, M, target_size)
-    # send_img(socket, dst)
-    cv2.imshow("original", frame)
-    cv2.imshow("Transformed", dst)
+
+    # Detect blobs.
+    blobs = find_blobs(dst)
+
+    # frame_with_blob = draw_blobs(dst, blobs)
+    black_image = numpy.zeros((target_size, target_size, 3), dtype=numpy.int8)
+    cv2.imshow("image before", black_image)
+    draw_blobs_as_circles(black_image, blobs)
+    screen_image = cv2.resize(
+        black_image, (screen_size, screen_size), interpolation=cv2.INTER_NEAREST
+    )
+    # cv2.imshow("im_with_keypoints", frame_with_blob)
+    send_img(socket, screen_image)
+    cv2.imshow("image", dst)
+    cv2.imshow("image with blobs", black_image)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 
 # Turn screen black
-screen_to_black(socket, target_size)
+screen_to_black(socket, screen_size)
 # After the loop release the cap object
-cam.stop()
+cam.release()
 # Destroy all the windows
 cv2.destroyAllWindows()
