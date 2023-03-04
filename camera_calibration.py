@@ -57,7 +57,7 @@ def find_screen_corners(frame):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (25, 25), 0)
-    cv2.imshow("filtrado", gray)
+    # cv2.imshow("filtrado", gray)
     results = detector.detect(gray)
     if results:
         r = results[0]
@@ -68,7 +68,7 @@ def find_screen_corners(frame):
         D = (int(D[0]), int(D[1]))
         corners = [A, B, C, D]
         image_with_lines = draw_detection(frame, corners)
-        cv2.imshow("Cuadrado", image_with_lines)
+        # cv2.imshow("Cuadrado", image_with_lines)
         return corners
 
     return None
@@ -267,45 +267,49 @@ def draw_blobs_as_circles(frame, blobs):
         cv2.circle(frame, center, radius, (255, 0, 255), -1)
 
 
-# cam = VideoCapture(4)
-# cam = SingleVideoCapture(4)
-cam = cv2.VideoCapture(4)
-socket = connect_to_screen(host, port)
-calibration_image = open_image("tag16_05.png")
-send_img(socket, calibration_image)
-M = calibrate(cam, target_size, socket)
-screen_to_black(socket, screen_size)
+def main():
+    # cam = VideoCapture(4)
+    # cam = SingleVideoCapture(4)
+    cam = cv2.VideoCapture(4)
+    socket = connect_to_screen(host, port)
+    calibration_image = open_image("tag16_05.png")
+    send_img(socket, calibration_image)
+    M = calibrate(cam, target_size, socket)
+    screen_to_black(socket, screen_size)
 
-while True:
-    ret_val, frame = cam.read()
+    while True:
+        ret_val, frame = cam.read()
 
-    if frame is None:
-        continue
+        if frame is None:
+            continue
 
-    dst = transform_frame(frame, M, target_size)
+        dst = transform_frame(frame, M, target_size)
 
-    # Detect blobs.
-    blobs = find_blobs(dst)
+        # Detect blobs.
+        blobs = find_blobs(dst)
 
-    # frame_with_blob = draw_blobs(dst, blobs)
-    black_image = numpy.zeros((target_size, target_size, 3), dtype=numpy.int8)
-    cv2.imshow("image before", black_image)
-    draw_blobs_as_circles(black_image, blobs)
-    screen_image = cv2.resize(
-        black_image, (screen_size, screen_size), interpolation=cv2.INTER_NEAREST
-    )
-    # cv2.imshow("im_with_keypoints", frame_with_blob)
-    send_img(socket, screen_image)
-    cv2.imshow("image", dst)
-    cv2.imshow("image with blobs", black_image)
+        # frame_with_blob = draw_blobs(dst, blobs)
+        black_image = numpy.zeros((target_size, target_size, 3), dtype=numpy.int8)
+        cv2.imshow("image before", black_image)
+        draw_blobs_as_circles(black_image, blobs)
+        screen_image = cv2.resize(
+            black_image, (screen_size, screen_size), interpolation=cv2.INTER_NEAREST
+        )
+        # cv2.imshow("im_with_keypoints", frame_with_blob)
+        send_img(socket, screen_image)
+        cv2.imshow("image", dst)
+        cv2.imshow("image with blobs", black_image)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    # Turn screen black
+    screen_to_black(socket, screen_size)
+    # After the loop release the cap object
+    cam.release()
+    # Destroy all the windows
+    cv2.destroyAllWindows()
 
 
-# Turn screen black
-screen_to_black(socket, screen_size)
-# After the loop release the cap object
-cam.release()
-# Destroy all the windows
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    main()
