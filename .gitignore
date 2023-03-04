@@ -5,3 +5,5 @@ videos.zip
 Pictures
 videos_proyectados
 __pycache__
+dataset
+yolov8s.pt

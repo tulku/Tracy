@@ -2,12 +2,12 @@
 import queue
 import sys
 import threading
-import time
 
 import apriltag
 import cv2
 import numpy
 import zmq
+from ultralytics import YOLO
 
 host = "192.168.1.177"
 port = 1337
@@ -37,6 +37,24 @@ def send_img(socket, img):
 def screen_to_black(socket, screen_size):
     black_image = numpy.zeros(screen_size * screen_size * 3, dtype=numpy.int8)
     send_img(socket, black_image)
+
+
+def load_yolo_model():
+    return YOLO("models/best.pt")
+
+
+def infer_dice_positions(model, frame):
+    results = model(source=frame)
+    blobs = []
+    for result in results:
+        for dice_number in range(0, result.boxes.xywh.shape[0]):
+            dice = result.boxes.xywh[dice_number]
+            blob = cv2.KeyPoint()
+            blob.pt = (float(dice[0]), float(dice[1]))
+            blob.size = float(dice[2])
+            blobs.append(blob)
+
+    return blobs
 
 
 def find_screen_corners(frame):
@@ -267,7 +285,7 @@ def draw_blobs_as_circles(frame, blobs):
         cv2.circle(frame, center, radius, (255, 0, 255), -1)
 
 
-def main():
+def main(use_yolo=False):
     # cam = VideoCapture(4)
     # cam = SingleVideoCapture(4)
     cam = cv2.VideoCapture(4)
@@ -276,6 +294,9 @@ def main():
     send_img(socket, calibration_image)
     M = calibrate(cam, target_size, socket)
     screen_to_black(socket, screen_size)
+
+    if use_yolo:
+        model = load_yolo_model()
 
     while True:
         ret_val, frame = cam.read()
@@ -286,7 +307,10 @@ def main():
         dst = transform_frame(frame, M, target_size)
 
         # Detect blobs.
-        blobs = find_blobs(dst)
+        if use_yolo:
+            blobs = infer_dice_positions(model, dst)
+        else:
+            blobs = find_blobs(dst)
 
         # frame_with_blob = draw_blobs(dst, blobs)
         black_image = numpy.zeros((target_size, target_size, 3), dtype=numpy.int8)
@@ -309,6 +333,18 @@ def main():
     cam.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
+
+
+def yolo_main():
+    image_path = sys.argv[1]
+    image = cv2.imread(image_path)
+    model = load_yolo_model()
+    blobs = infer_dice_positions(model, image)
+    draw_blobs_as_circles(image, blobs)
+    cv2.imshow("image with blobs", image)
+
+    if cv2.waitKey(0) & 0xFF == ord("q"):
+        pass
 
 
 if __name__ == "__main__":
