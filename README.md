@@ -1,17 +1,23 @@
-Steps for making plots with Plotly
+# Tracy: the dice tracing app
 
-1- Ir a la carpeta del repo
+To install dependencies:
 
-2-" . env/bin/activate"
+```shell
+$ poetry install
+```
 
-3- jupyter lab
+# Using YOLOv8
 
-	- correr primero lo de importar y despues el programa
-	
-	
+## Training
 
+```shell
+$ poetry shell
+$ yolo train data=/home/tulku/Repos/Tracy/dataset/data.yaml model=yolov8s.pt epochs=40 lr0=0.01 batch=15
+```
 
+## Prediction
 
-
-
-
+```shell
+$ poetry shell
+$ yolo predict show=True model=<path_to>/best.pt source=<image to predict>
+```
