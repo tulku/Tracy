@@ -9,7 +9,7 @@ import numpy
 import zmq
 from ultralytics import YOLO
 
-host = "192.168.1.177"
+host = "192.168.1.178"
 port = 1337
 
 screen_size = 64
@@ -51,7 +51,7 @@ def infer_dice_positions(model, frame):
             dice = result.boxes.xywh[dice_number]
             blob = cv2.KeyPoint()
             blob.pt = (float(dice[0]), float(dice[1]))
-            blob.size = float(dice[2])
+            blob.size = float(dice[2] / 2)
             blobs.append(blob)
 
     return blobs
@@ -278,11 +278,19 @@ def draw_circles(frame, circles):
 
 
 def draw_blobs_as_circles(frame, blobs):
-    for blob in blobs:
+    colors = [
+        (255, 0, 0),
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 255, 0),
+        (0, 255, 255),
+        (255, 0, 255),
+    ]
+    for blob_number, blob in enumerate(blobs):
         center = numpy.uint16(numpy.around(blob.pt))
         # circle center
         radius = int(blob.size)
-        cv2.circle(frame, center, radius, (255, 0, 255), -1)
+        cv2.circle(frame, center, radius, colors[blob_number % len(colors)], -1)
 
 
 def main(use_yolo=False):
@@ -348,4 +356,4 @@ def yolo_main():
 
 
 if __name__ == "__main__":
-    main()
+    main(use_yolo=True)
