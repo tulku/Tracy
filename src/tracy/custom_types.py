@@ -7,8 +7,8 @@ class ScreenConfig:
     height: int
     scale: int
 
-    def getScreenSize(self):
+    def get_screen_size(self):
         return (self.width, self.height)
 
-    def getTargetSize(self):
+    def get_target_size(self):
         return (self.width * self.scale, self.height * self.scale)
