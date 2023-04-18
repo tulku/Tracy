@@ -68,7 +68,7 @@ class TracySim:
             image = self.to_numpy(message)
             simulated = self.simulate_screen(image)
             cv2.imshow("TRACY SIM", simulated)
-            cv2.waitKey(1)
+            cv2.waitKey(50)
 
 
 def main():

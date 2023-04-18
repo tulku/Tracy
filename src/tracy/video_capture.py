@@ -25,6 +25,7 @@ class PyGameVideoCapture:
         if surface is None:
             return None
         frame = pygame.surfarray.array3d(surface)
+        frame = frame.swapaxes(0, 1)
         return cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     def release(self):
@@ -36,30 +37,21 @@ class Cv2VideoCapture:
         self._cam = cv2.VideoCapture(camera)
 
     def read(self) -> pygame.Surface | None:
+        frame = self.as_numpy()
+        if frame is None:
+            return None
+        frame = frame.swapaxes(0, 1)
+        return pygame.pixelcopy.make_surface(frame)
+
+    def as_numpy(self) -> numpy.ndarray | None:
         ret_val, frame = self._cam.read()
         if not ret_val:
             return None
 
-        return pygame.pixelcopy.make_surface(frame)
+        return frame
 
     def release(self):
         self._cam.release()
-
-
-class SingleVideoCapture:
-    def __init__(self, name):
-        self.name = name
-
-    def read(self) -> pygame.Surface | None:
-        cap = cv2.VideoCapture(self.name)
-        ret_val, frame = cap.read()
-        cap.release()
-        if not ret_val:
-            return None
-        return pygame.pixelcopy.make_surface(frame)
-
-    def release(self):
-        pass
 
 
 class RecordedVideoCapture:
@@ -73,9 +65,7 @@ class RecordedVideoCapture:
         all_frames = sorted(os.listdir(video_frames))
         self.infinite_frames = itertools.cycle(all_frames)
         if first_frame is not None:
-            self.infinite_frames = itertools.chain(
-                [first_frame] * 1000, self.infinite_frames
-            )
+            self.infinite_frames = itertools.chain([first_frame], self.infinite_frames)
 
     def read(self) -> pygame.Surface | None:
         img_path = next(self.infinite_frames)
@@ -89,4 +79,5 @@ class RecordedVideoCapture:
         if surface is None:
             return None
         frame = pygame.surfarray.array3d(surface)
+        frame = frame.swapaxes(0, 1)
         return cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)

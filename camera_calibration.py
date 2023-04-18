@@ -84,7 +84,7 @@ def find_screen_corners(frame):
         D = (int(D[0]), int(D[1]))
         corners = [A, B, C, D]
         image_with_lines = draw_detection(frame, corners)
-        # cv2.imshow("Cuadrado", image_with_lines)
+        cv2.imshow("Cuadrado", image_with_lines)
         return corners
 
     return None

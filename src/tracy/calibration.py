@@ -1,7 +1,6 @@
 import apriltag
 import cv2
 import numpy
-import pygame
 
 
 def find_screen_corners(frame: numpy.ndarray):
@@ -38,7 +37,7 @@ def find_screen_corners(frame: numpy.ndarray):
 def calculate_transform(corners, target_size):
     pts1 = numpy.float32(corners)
     pts2 = numpy.float32(
-        [[0, 0], [target_size[0], 0], target_size, target_size, [0, target_size[1]]]  # type: ignore
+        [[0, 0], [target_size[0], 0], target_size, [0, target_size[1]]]  # type: ignore
     )
     M = cv2.getPerspectiveTransform(pts1, pts2)  # type: ignore
     return M
@@ -53,9 +52,8 @@ def draw_detection(frame, corners):
     return frame_lines
 
 
-def transform_frame(surface: pygame.Surface, M, target_size):
+def transform_frame(frame: numpy.ndarray, M, target_size):
     # from here https://pypi.org/project/apriltag/
-    frame = pygame.surfarray.array3d(surface)
     return cv2.warpPerspective(frame, M, target_size)
 
 
@@ -67,7 +65,8 @@ def calibrate(cam, target_size):
         if frame is None:
             continue
         corners = find_screen_corners(frame)
-        cv2.imshow("original", frame)
     frame_and_lines = draw_detection(frame, corners)
     cv2.imshow("Cuadrado", frame_and_lines)
+    cv2.waitKey(1)
+
     return calculate_transform(corners, target_size)
