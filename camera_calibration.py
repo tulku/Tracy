@@ -58,7 +58,6 @@ def infer_dice_positions(model, frame):
 
 
 def find_screen_corners(frame):
-
     options = apriltag.DetectorOptions(
         families="tag16h5",
         border=1,
@@ -75,7 +74,6 @@ def find_screen_corners(frame):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (25, 25), 0)
-    # cv2.imshow("filtrado", gray)
     results = detector.detect(gray)
     if results:
         r = results[0]
@@ -86,7 +84,7 @@ def find_screen_corners(frame):
         D = (int(D[0]), int(D[1]))
         corners = [A, B, C, D]
         image_with_lines = draw_detection(frame, corners)
-        # cv2.imshow("Cuadrado", image_with_lines)
+        cv2.imshow("Cuadrado", image_with_lines)
         return corners
 
     return None

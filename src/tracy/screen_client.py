@@ -12,7 +12,7 @@ class ZmqScreenClient:
         self._socket.connect(f"tcp://{host}:{port}")
         self._screen_config = screen_config
 
-    def getConfig(self):
+    def get_config(self):
         return self._screen_config
 
     def show(self, surface):
@@ -20,7 +20,7 @@ class ZmqScreenClient:
         pygame_image = cv2.cvtColor(surface_array, cv2.COLOR_RGB2BGR)
         screen_image = cv2.resize(
             pygame_image,
-            self._screen_config.getScreenSize(),
+            self._screen_config.get_screen_size(),
             interpolation=cv2.INTER_NEAREST,
         )
         self._socket.send(screen_image.data.tobytes())
@@ -31,7 +31,7 @@ class Cv2ScreenClient:
     def __init__(self, screen_config: ScreenConfig):
         self._screen_config = screen_config
 
-    def getConfig(self):
+    def get_config(self):
         return self._screen_config
 
     def show(self, surface):

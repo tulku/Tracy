@@ -39,9 +39,9 @@ class TracySim:
 
     def simulate_screen(self, image):
         image = cv2.resize(
-            image, self.screen_config.getTargetSize(), interpolation=cv2.INTER_NEAREST
+            image, self.screen_config.get_target_size(), interpolation=cv2.INTER_NEAREST
         )
-        image = draw_grid(image, self.screen_config.getScreenSize())
+        image = draw_grid(image, self.screen_config.get_screen_size())
         return image
 
     def wait_for_message(self):
@@ -59,7 +59,7 @@ class TracySim:
         image = numpy.frombuffer(message, dtype=numpy.uint8)
         # Reshaping here to the screen size ensures that the image sent
         # has the correct size.
-        width, height = self.screen_config.getScreenSize()
+        width, height = self.screen_config.get_screen_size()
         return image.reshape((width, height, 3))
 
     def run(self):
@@ -68,7 +68,7 @@ class TracySim:
             image = self.to_numpy(message)
             simulated = self.simulate_screen(image)
             cv2.imshow("TRACY SIM", simulated)
-            cv2.waitKey(1)
+            cv2.waitKey(50)
 
 
 def main():
