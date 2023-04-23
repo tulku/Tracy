@@ -7,7 +7,12 @@ import pygame
 from .calibration import calibrate, transform_frame
 from .detector import YoloDetector
 from .screen_client import ScreenConfig, ZmqScreenClient
-from .video_capture import RecordedVideoCapture
+from .video_capture import (
+    Cv2VideoCapture,
+    PyGameVideoCapture,
+    RecordedVideoCapture,
+    image_from_file,
+)
 from .visualizations import draw_blobs_as_circles
 
 
@@ -32,10 +37,16 @@ class MainApp:
         self._transform = None
 
     def setup(self):
-        self._running = True
         self.buffer.fill("black")
+        self._running = True
 
-    def calibrate(self):
+    def show_calibration_frame(self):
+        frame = image_from_file("tag16_05.png", self.screen.get_config())
+        print("Showing calibration frame")
+        if frame is not None:
+            self.frame_to_buffer(frame)
+
+    def try_calibrate(self):
         self._transform = calibrate(
             self.camera, self.screen.get_config().get_target_size()
         )
@@ -61,23 +72,30 @@ class MainApp:
             draw_blobs_as_circles(frame, blobs)
             self.frame_to_buffer(frame)
 
+    def calibration_loop(self):
+        self.show_calibration_frame()
+        self.try_calibrate()
+
     def graphics_loop(self):
         pygame.display.flip()
 
     def run(self):
         self.setup()
-        self.calibrate()
         while self._running:
-            self.logic_loop()
             self.graphics_loop()
+            if self._transform is None:
+                self.calibration_loop()
+            else:
+                self.logic_loop()
+
             self.screen.show(self.buffer)
             self._dt = self.clock.tick(self.fps) / 1000
             cv2.waitKey(1)
 
 
-def main():
+def mocked():
     screen_config = ScreenConfig(64, 64, 10)
-    screen_client = ZmqScreenClient(screen_config)
+    screen_client = ZmqScreenClient(screen_config, host="localhost")
     camera = RecordedVideoCapture(
         "/mnt/hdd/TracyDataset/videos/dados_cuadrado",
         "/mnt/hdd/TracyDataset/videos/april_tag/tag_2.png",
@@ -88,5 +106,15 @@ def main():
     pygame.quit()
 
 
+def tracy():
+    screen_config = ScreenConfig(64, 64, 10)
+    screen_client = ZmqScreenClient(screen_config, host="192.168.1.178")
+    camera = Cv2VideoCapture("/dev/video0")
+    detector = YoloDetector()
+    app = MainApp(screen_client, camera, detector)
+    app.run()
+    pygame.quit()
+
+
 if __name__ == "__main__":
-    main()
+    tracy()

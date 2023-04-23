@@ -57,14 +57,21 @@ def transform_frame(frame: numpy.ndarray, M, target_size):
     return cv2.warpPerspective(frame, M, target_size)
 
 
-def calibrate(cam, target_size):
+def calibrate(cam, target_size) -> numpy.ndarray | None:
     corners = None
     frame = None
-    while corners is None:
-        frame = cam.as_numpy()
-        if frame is None:
-            continue
-        corners = find_screen_corners(frame)
+
+    print("Asking for a camera frame")
+
+    frame = cam.as_numpy()
+    if frame is None:
+        print("Frame is None")
+        return None
+    corners = find_screen_corners(frame)
+    if corners is None:
+        print("Could not find calibration pattern")
+        return None
+
     frame_and_lines = draw_detection(frame, corners)
     cv2.imshow("Cuadrado", frame_and_lines)
     cv2.waitKey(1)

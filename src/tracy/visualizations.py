@@ -15,4 +15,4 @@ def draw_blobs_as_circles(frame, blobs):
         center = numpy.uint16(numpy.around(blob.pt))
         # circle center
         radius = int(blob.size)
-        cv2.circle(frame, center, radius, colors[blob_number % len(colors)], -1)
+        cv2.circle(frame, center, 20, colors[blob_number % len(colors)], -1)
