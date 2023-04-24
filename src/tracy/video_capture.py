@@ -1,5 +1,6 @@
 import itertools
 import os
+import typing
 
 import cv2
 import numpy
@@ -38,14 +39,14 @@ class Cv2VideoCapture:
     def __init__(self, camera="/dev/video0"):
         self._cam = cv2.VideoCapture(camera)
 
-    def read(self) -> pygame.Surface | None:
+    def read(self) -> typing.Optional[pygame.Surface]:
         frame = self.as_numpy()
         if frame is None:
             return None
         frame = frame.swapaxes(0, 1)
         return pygame.pixelcopy.make_surface(frame)
 
-    def as_numpy(self) -> numpy.ndarray | None:
+    def as_numpy(self) -> typing.Optional[numpy.ndarray]:
         ret_val, frame = self._cam.read()
         if not ret_val:
             return None
@@ -75,14 +76,14 @@ class RecordedVideoCapture:
                 [first_frame] * first_frame_times, self.infinite_frames
             )
 
-    def read(self) -> pygame.Surface | None:
+    def read(self) -> typing.Optional[pygame.Surface]:
         img_path = next(self.infinite_frames)
         return pygame.image.load(os.path.join(self.path, img_path))
 
     def release(self):
         pass
 
-    def as_numpy(self) -> numpy.ndarray | None:
+    def as_numpy(self) -> typing.Optional[numpy.ndarray]:
         surface = self.read()
         if surface is None:
             return None
@@ -91,7 +92,9 @@ class RecordedVideoCapture:
         return cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
 
-def image_from_file(path: str, screen_config: ScreenConfig) -> numpy.ndarray | None:
+def image_from_file(
+    path: str, screen_config: ScreenConfig
+) -> typing.Optional[numpy.ndarray]:
     image = cv2.imread(path)
     return cv2.resize(
         image,

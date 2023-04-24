@@ -1,3 +1,5 @@
+import typing
+
 import apriltag
 import cv2
 import numpy
@@ -57,7 +59,7 @@ def transform_frame(frame: numpy.ndarray, M, target_size):
     return cv2.warpPerspective(frame, M, target_size)
 
 
-def calibrate(cam, target_size) -> numpy.ndarray | None:
+def calibrate(cam, target_size) -> typing.Optional[numpy.ndarray]:
     corners = None
     frame = None
 
