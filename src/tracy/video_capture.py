@@ -18,12 +18,12 @@ class PyGameVideoCapture:
         self._cam = pygame.camera.Camera(camera, (1280, 720))
         self._cam.start()
 
-    def read(self) -> pygame.Surface | None:
+    def read(self) -> typing.Optional[pygame.Surface]:
         if self._cam.query_image():
             return self._cam.get_image()
         return None
 
-    def as_numpy(self) -> numpy.ndarray | None:
+    def as_numpy(self) -> typing.Optional[numpy.ndarray]:
         surface = self.read()
         if surface is None:
             return None
@@ -65,7 +65,7 @@ class RecordedVideoCapture:
     def __init__(
         self,
         video_frames: str,
-        first_frame: str | None = None,
+        first_frame: typing.Optional[str] = None,
         first_frame_times: int = 5,
     ):
         self.path = video_frames
