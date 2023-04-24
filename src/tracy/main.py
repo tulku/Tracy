@@ -5,7 +5,7 @@ import numpy
 import pygame
 
 from .calibration import calibrate, transform_frame
-from .detector import YoloDetector
+from .detector import BlobDetector, YoloDetector
 from .screen_client import ScreenConfig, ZmqScreenClient
 from .video_capture import (
     Cv2VideoCapture,
@@ -110,7 +110,7 @@ def tracy():
     screen_config = ScreenConfig(64, 64, 10)
     screen_client = ZmqScreenClient(screen_config, host="192.168.1.178")
     camera = Cv2VideoCapture("/dev/video0")
-    detector = YoloDetector()
+    detector = BlobDetector()
     app = MainApp(screen_client, camera, detector)
     app.run()
     pygame.quit()
