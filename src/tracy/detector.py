@@ -1,23 +1,23 @@
 import cv2
-from ultralytics import YOLO
 
+# class YoloDetector:
+#     from ultralytics import YOLO
 
-class YoloDetector:
-    def __init__(self, model="models/best.pt"):
-        self.model = YOLO(model)
+#     def __init__(self, model="models/best.pt"):
+#         self.model = YOLO(model)
 
-    def detect(self, frame):
-        results = self.model(source=frame)
-        blobs = []
-        for result in results:
-            for dice_number in range(0, result.boxes.xywh.shape[0]):
-                dice = result.boxes.xywh[dice_number]
-                blob = cv2.KeyPoint()
-                blob.pt = (float(dice[0]), float(dice[1]))
-                blob.size = float(dice[2] / 2)
-                blobs.append(blob)
+#     def detect(self, frame):
+#         results = self.model(source=frame)
+#         blobs = []
+#         for result in results:
+#             for dice_number in range(0, result.boxes.xywh.shape[0]):
+#                 dice = result.boxes.xywh[dice_number]
+#                 blob = cv2.KeyPoint()
+#                 blob.pt = (float(dice[0]), float(dice[1]))
+#                 blob.size = float(dice[2] / 2)
+#                 blobs.append(blob)
 
-        return blobs
+#         return blobs
 
 
 class BlobDetector:

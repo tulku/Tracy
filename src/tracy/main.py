@@ -5,7 +5,7 @@ import numpy
 import pygame
 
 from .calibration import calibrate, transform_frame
-from .detector import BlobDetector, YoloDetector
+from .detector import BlobDetector
 from .screen_client import ScreenConfig, ZmqScreenClient
 from .video_capture import (
     Cv2VideoCapture,
@@ -100,7 +100,8 @@ def mocked():
         "/mnt/hdd/TracyDataset/videos/dados_cuadrado",
         "/mnt/hdd/TracyDataset/videos/april_tag/tag_2.png",
     )
-    detector = YoloDetector()
+    # detector = YoloDetector()
+    detector = BlobDetector()
     app = MainApp(screen_client, camera, detector)
     app.run()
     pygame.quit()
