@@ -31,8 +31,6 @@ class MainApp:
         self.buffer = init_pygame_display(screen_client.get_config())
         self.clock = pygame.time.Clock()
         self.fps = 60
-
-        self._dt = 0
         self._running = False
         self._transform = None
 
@@ -89,8 +87,9 @@ class MainApp:
                 self.logic_loop()
 
             self.screen.show(self.buffer)
-            self._dt = self.clock.tick(self.fps) / 1000
-            cv2.waitKey(1)
+            self.clock.tick(self.fps)
+            print(self.clock.get_fps())
+            # cv2.waitKey(1)
 
 
 def mocked():
@@ -109,7 +108,7 @@ def mocked():
 
 def tracy():
     screen_config = ScreenConfig(64, 64, 10)
-    screen_client = ZmqScreenClient(screen_config, host="192.168.1.178")
+    screen_client = ZmqScreenClient(screen_config, host="localhost")
     camera = Cv2VideoCapture("/dev/video0")
     detector = BlobDetector()
     app = MainApp(screen_client, camera, detector)

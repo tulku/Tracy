@@ -21,7 +21,7 @@ def find_screen_corners(frame: numpy.ndarray):
     detector = apriltag.Detector(options)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (25, 25), 0)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
     results = detector.detect(gray)
     if results:
         r = results[0]
@@ -63,15 +63,11 @@ def calibrate(cam, target_size) -> typing.Optional[numpy.ndarray]:
     corners = None
     frame = None
 
-    print("Asking for a camera frame")
-
     frame = cam.as_numpy()
     if frame is None:
-        print("Frame is None")
         return None
     corners = find_screen_corners(frame)
     if corners is None:
-        print("Could not find calibration pattern")
         return None
 
     # frame_and_lines = draw_detection(frame, corners)
