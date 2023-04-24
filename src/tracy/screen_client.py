@@ -37,5 +37,5 @@ class Cv2ScreenClient:
     def show(self, surface):
         surface_array = pygame.surfarray.array3d(surface)
         surface_array = cv2.cvtColor(surface_array, cv2.COLOR_RGB2BGR)
-        cv2.imshow("frame", surface_array)
-        cv2.waitKey(1)
+        # cv2.imshow("frame", surface_array)
+        # cv2.waitKey(1)

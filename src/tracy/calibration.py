@@ -74,8 +74,8 @@ def calibrate(cam, target_size) -> typing.Optional[numpy.ndarray]:
         print("Could not find calibration pattern")
         return None
 
-    frame_and_lines = draw_detection(frame, corners)
-    cv2.imshow("Cuadrado", frame_and_lines)
-    cv2.waitKey(1)
+    # frame_and_lines = draw_detection(frame, corners)
+    # cv2.imshow("Cuadrado", frame_and_lines)
+    # cv2.waitKey(1)
 
     return calculate_transform(corners, target_size)

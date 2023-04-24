@@ -64,9 +64,9 @@ class MainApp:
     def logic_loop(self):
         frame = self.camera.as_numpy()
         if frame is not None:
-            cv2.imshow("Raw Frame", frame)
+            # cv2.imshow("Raw Frame", frame)
             frame = self.transform_frame(frame)
-            cv2.imshow("Transformed Frame", frame)
+            # cv2.imshow("Transformed Frame", frame)
             blobs = self.detector.detect(frame)
             frame.fill(0)
             draw_blobs_as_circles(frame, blobs)
